@@ -1,6 +1,10 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { Telegraf } from "telegraf";
 
+export default async (req: VercelRequest, res: VercelResponse) => {
+  console.log("delete-messages endpoint hit", req.body); // <-- add this
+  ...
+}
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 const bot = new Telegraf(BOT_TOKEN);
 
