@@ -31,7 +31,7 @@ bot.command("start", async (ctx) => {
   console.log("Firing fetch to:", deleteUrl); // <-- confirm the URL
   
   // Fire-and-forget: tell the delete endpoint to clean up after 60s
-  fetch(webhookUrl, {
+  fetch(deleteUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
