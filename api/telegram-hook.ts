@@ -50,9 +50,11 @@ How to make dat REAL cash using all sorts of proven methods:
 
     console.log(`Reply to ${COMMAND} command sent successfully.`);
 
-    // Delete both messages after 5 minutes (300,000 ms)
-    setTimeout(async () => {
-      try {
+    // Wait 5 seconds BEFORE the function returns
+    await sleep(5000);
+
+
+   try {
         // Delete user's /start message
         await ctx.telegram.deleteMessage(chatId, userMessageId);
         console.log("User message deleted.");
@@ -67,7 +69,6 @@ How to make dat REAL cash using all sorts of proven methods:
       } catch (err) {
         console.error("Failed to delete bot reply:", err);
       }
-    }, 5 * 60 * 1000);
 
   } catch (error) {
     console.error(`Something went wrong with the ${COMMAND} command:`, error);
