@@ -3,45 +3,13 @@ import { Telegraf } from "telegraf";
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 const webhookUrl = process.env.WEBHOOK_URL!;
-
 const bot = new Telegraf(BOT_TOKEN);
 
-bot.command("start", async (ctx) => {
-  console.log("WEBHOOK_URL is:", webhookUrl); // <-- add this
-  console.log("start command received");       // <-- and this
-  
-  const channelUrl = "t.me/lionhartproxxx";
-  const targetUrl = "t.me/+mQ31t_sl6pw4MzNk";
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const userMessageId = ctx.message.message_id;
-  const chatId = ctx.message.chat.id;
-
-  const sentMessage = await ctx.reply(
-    `[Join now!](${targetUrl})\n[Join Here](${targetUrl})`,
-    {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [[{ text: "Join Channel", url: channelUrl }]],
-      },
-    }
-  );
-
-  console.log("Reply sent, chatId:", chatId, "botMessageId:", sentMessage.message_id);
-  const deleteUrl = `https://wave-proxies.vercel.app/api/delete-messages`;
-  console.log("Firing fetch to:", deleteUrl); // <-- confirm the URL
-  
-  // Fire-and-forget: tell the delete endpoint to clean up after 60s
-  fetch(deleteUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chatId,
-      userMessageId,
-      botMessageId: sentMessage.message_id,
-    }),
-  }).then(() => console.log("Fetch to delete-messages succeeded"))
-    .catch((err) => console.error("Fetch to delete-messages failed:", err));
-});
+export const config = {
+  maxDuration: 60,
+};
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
@@ -52,8 +20,53 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       return res.status(200).send("OK");
     }
 
+    if (body?.message?.text === "/start") {
+      const chatId = body.message.chat.id;
+      const userMessageId = body.message.message_id;
+      const targetUrl = "t.me/+mQ31t_sl6pw4MzNk";
+      const channelUrl = "t.me/lionhartproxxx";
+
+      // Send reply
+      const sent = await bot.telegram.sendMessage(
+        chatId,
+        `[Join now!](${targetUrl})\n[Join Here](${targetUrl})`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [[{ text: "Join Channel", url: channelUrl }]],
+          },
+        }
+      );
+
+      console.log("Reply sent:", sent.message_id);
+
+      // Respond to Telegram immediately
+      res.status(200).send("OK");
+
+      // Keep function alive and delete after 60s
+      await sleep(60 * 1000);
+
+      try {
+        await bot.telegram.deleteMessage(chatId, userMessageId);
+        console.log("User message deleted");
+      } catch (err) {
+        console.error("Failed to delete user message:", err);
+      }
+
+      try {
+        await bot.telegram.deleteMessage(chatId, sent.message_id);
+        console.log("Bot message deleted");
+      } catch (err) {
+        console.error("Failed to delete bot message:", err);
+      }
+
+      return;
+    }
+
+    // For all other updates
     await bot.handleUpdate(body);
-    return res.status(200).send("OK"); // Telegram gets this immediately
+    return res.status(200).send("OK");
+
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Internal server error" });
