@@ -7,6 +7,9 @@ const webhookUrl = process.env.WEBHOOK_URL!;
 const bot = new Telegraf(BOT_TOKEN);
 
 bot.command("start", async (ctx) => {
+  console.log("WEBHOOK_URL is:", webhookUrl); // <-- add this
+  console.log("start command received");       // <-- and this
+  
   const channelUrl = "t.me/lionhartproxxx";
   const targetUrl = "t.me/+mQ31t_sl6pw4MzNk";
 
@@ -23,8 +26,12 @@ bot.command("start", async (ctx) => {
     }
   );
 
+  console.log("Reply sent, chatId:", chatId, "botMessageId:", sentMessage.message_id);
+  const deleteUrl = `${webhookUrl}/api/delete-messages`;
+  console.log("Firing fetch to:", deleteUrl); // <-- confirm the URL
+  
   // Fire-and-forget: tell the delete endpoint to clean up after 60s
-  fetch(`${webhookUrl}/api/delete-messages`, {
+  fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -32,7 +39,8 @@ bot.command("start", async (ctx) => {
       userMessageId,
       botMessageId: sentMessage.message_id,
     }),
-  }).then(() => console.log("Delete request sent")).catch(console.error);
+  })..then(() => console.log("Fetch to delete-messages succeeded"))
+    .catch((err) => console.error("Fetch to delete-messages failed:", err));
 });
 
 export default async (req: VercelRequest, res: VercelResponse) => {
