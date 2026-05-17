@@ -1,69 +1,38 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { Telegraf } from "telegraf";
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const webhookUrl = process.env.WEBHOOK_URL;
+const BOT_TOKEN = process.env.BOT_TOKEN!;
+const webhookUrl = process.env.WEBHOOK_URL!;
 
 const bot = new Telegraf(BOT_TOKEN);
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-export async function handleStartCommand(ctx) {
-  const COMMAND = "/start";
+bot.command("start", async (ctx) => {
   const channelUrl = "t.me/lionhartproxxx";
   const targetUrl = "t.me/+mQ31t_sl6pw4MzNk";
 
-  const reply = `
-[Join now!](${targetUrl})
-[Join Here](${targetUrl})
-`;
+  const userMessageId = ctx.message.message_id;
+  const chatId = ctx.message.chat.id;
 
-  try {
-    const userMessageId = ctx.message.message_id;
-    const chatId = ctx.message.chat.id;
-
-    const sentMessage = await ctx.reply(reply, {
+  const sentMessage = await ctx.reply(
+    `[Join now!](${targetUrl})\n[Join Here](${targetUrl})`,
+    {
       parse_mode: "Markdown",
       reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: "Join Channel",
-              url: channelUrl,
-            },
-          ],
-        ],
+        inline_keyboard: [[{ text: "Join Channel", url: channelUrl }]],
       },
-    });
-
-    console.log(`Reply to ${COMMAND} command sent successfully.`);
-
-    // Wait 5 seconds BEFORE the function returns
-    await sleep(5000);
-
-    // Delete user's /start message
-    try {
-      await ctx.telegram.deleteMessage(chatId, userMessageId);
-      console.log("User message deleted.");
-    } catch (err) {
-      console.error("Failed to delete user message:", err);
     }
+  );
 
-    // Delete bot's reply
-    try {
-      await ctx.telegram.deleteMessage(chatId, sentMessage.message_id);
-      console.log("Bot reply deleted.");
-    } catch (err) {
-      console.error("Failed to delete bot reply:", err);
-    }
-
-  } catch (error) {
-    console.error(`Something went wrong with the ${COMMAND} command:`, error);
-  }
-}
-
-bot.command("start", async (ctx) => {
-  await handleStartCommand(ctx);
+  // Fire-and-forget: tell the delete endpoint to clean up after 60s
+  fetch(`${webhookUrl}/api/delete-messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chatId,
+      userMessageId,
+      botMessageId: sentMessage.message_id,
+    }),
+  }).catch(console.error);
 });
 
 export default async (req: VercelRequest, res: VercelResponse) => {
@@ -71,13 +40,14 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const { body, query } = req;
 
     if (query.setWebhook === "true") {
-      await bot.telegram.setWebhook(webhookUrl);
+      await bot.telegram.setWebhook(`${webhookUrl}/api/telegram-hook`);
       return res.status(200).send("OK");
     }
 
-    await bot.handleUpdate(body);  // deletion happens inside here before this resolves
-    return res.status(200).send("OK");
+    await bot.handleUpdate(body);
+    return res.status(200).send("OK"); // Telegram gets this immediately
   } catch (err) {
-    return res.json({ error: "Internal server error" }, { status: 500 });
+    console.error(err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
