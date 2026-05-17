@@ -39,7 +39,7 @@ bot.command("start", async (ctx) => {
       userMessageId,
       botMessageId: sentMessage.message_id,
     }),
-  })..then(() => console.log("Fetch to delete-messages succeeded"))
+  }).then(() => console.log("Fetch to delete-messages succeeded"))
     .catch((err) => console.error("Fetch to delete-messages failed:", err));
 });
 
