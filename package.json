@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/jsjoeio/telegram-bot-template#readme",
   "dependencies": {
-    "@upstash/qstash": "^2.7.0",
+    "@supabase/supabase-js": "^2.39.0",
     "telegraf": "3",
     "next": "14.0.0"
   },
