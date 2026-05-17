@@ -26,7 +26,6 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       const targetUrl = "t.me/+mQ31t_sl6pw4MzNk";
       const channelUrl = "t.me/lionhartproxxx";
 
-      // Send reply
       const sent = await bot.telegram.sendMessage(
         chatId,
         `[Join now!](${targetUrl})\n[Join Here](${targetUrl})`,
@@ -40,11 +39,9 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
       console.log("Reply sent:", sent.message_id);
 
-      // Respond to Telegram immediately
-      res.status(200).send("OK");
-
-      // Keep function alive and delete after 60s
+      // Wait 60 seconds BEFORE responding — function stays alive
       await sleep(60 * 1000);
+      console.log("Sleep done, deleting messages...");
 
       try {
         await bot.telegram.deleteMessage(chatId, userMessageId);
@@ -60,10 +57,10 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         console.error("Failed to delete bot message:", err);
       }
 
-      return;
+      // Respond AFTER everything is done
+      return res.status(200).send("OK");
     }
 
-    // For all other updates
     await bot.handleUpdate(body);
     return res.status(200).send("OK");
 
