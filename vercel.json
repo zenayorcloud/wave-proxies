@@ -1,10 +1,5 @@
 {
   "github": {
     "silent": true
-  },
-  "functions": {
-    "api/telegram-hook.ts": {
-      "maxDuration": 60
-    }
   }
 }
