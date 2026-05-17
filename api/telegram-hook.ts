@@ -34,7 +34,7 @@ export async function handleStartCommand(ctx) {
 
     console.log(`Reply to ${COMMAND} command sent successfully.`);
 
-    // Schedule deletion 5 minutes from now
+    // Schedule deletion 5 minutes from now nn
     const deleteAt = new Date(Date.now() + 1 * 60 * 1000).toISOString();
 
     const { error } = await supabase.from("pending_deletions").insert({
