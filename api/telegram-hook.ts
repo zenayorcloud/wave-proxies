@@ -32,7 +32,7 @@ bot.command("start", async (ctx) => {
       userMessageId,
       botMessageId: sentMessage.message_id,
     }),
-  }).catch(console.error);
+  }).then(() => console.log("Delete request sent")).catch(console.error);
 });
 
 export default async (req: VercelRequest, res: VercelResponse) => {
