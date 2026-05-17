@@ -8,29 +8,17 @@ const bot = new Telegraf(BOT_TOKEN);
 
 export async function handleStartCommand(ctx) {
   const COMMAND = "/start";
-  const channelUrl = "t.me/waveprxp";
-  const targetUrl = "t.me/+-gOMOX17GBllYzMx";
-
+  const channelUrl = "t.me/lionhartproxxx";
+  const targetUrl = "t.me/+mQ31t_sl6pw4MzNk";
   const reply = `
-[Join now if you trynna eat!!
-
-How to make dat REAL cash using all sorts of proven methods:
-
-- Bank logs and credit cards cashout methods
-
-- Cashapp plays for quick profits
-
-- Abusing employment benefits for free funds
-
-- Gambling and rental plays for easy dough
-
-- And way more!](${targetUrl})
-
-
+[Join now!](${targetUrl})
 [Join Here](${targetUrl})
 `;
 
   try {
+    const userMessageId = ctx.message.message_id;  // capture /start message ID
+    const chatId = ctx.message.chat.id;
+
     const sentMessage = await ctx.reply(reply, {
       parse_mode: "Markdown",
       reply_markup: {
@@ -47,18 +35,23 @@ How to make dat REAL cash using all sorts of proven methods:
 
     console.log(`Reply to ${COMMAND} command sent successfully.`);
 
-    // Delete the bot's reply after 5 minutes (300,000 ms)
     setTimeout(async () => {
+      // Delete user's /start message
       try {
-        await ctx.telegram.deleteMessage(
-          sentMessage.chat.id,
-          sentMessage.message_id
-        );
-        console.log("Bot reply deleted after 5 minutes.");
+        await ctx.telegram.deleteMessage(chatId, userMessageId);
+        console.log("User /start message deleted.");
+      } catch (deleteError) {
+        console.error("Failed to delete user message:", deleteError);
+      }
+
+      // Delete bot's reply
+      try {
+        await ctx.telegram.deleteMessage(chatId, sentMessage.message_id);
+        console.log("Bot reply deleted.");
       } catch (deleteError) {
         console.error("Failed to delete bot reply:", deleteError);
       }
-    }, 1 * 60 * 1000);
+    }, 2 * 60 * 1000);
 
   } catch (error) {
     console.error(`Something went wrong with the ${COMMAND} command:`, error);
