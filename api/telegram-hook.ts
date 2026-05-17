@@ -67,7 +67,7 @@ How to make dat REAL cash using all sorts of proven methods:
       } catch (err) {
         console.error("Failed to delete bot reply:", err);
       }
-    }, 1 * 60 * 1000);
+    }, 5 * 1000);
 
   } catch (error) {
     console.error(`Something went wrong with the ${COMMAND} command:`, error);
