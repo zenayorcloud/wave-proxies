@@ -1,45 +1,51 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { Telegraf } from "telegraf";
-
-console.log("delete-messages module loaded"); // <-- outside the handler
+import { Receiver } from "@upstash/qstash";
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 const bot = new Telegraf(BOT_TOKEN);
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const receiver = new Receiver({
+  currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY!,
+  nextSigningKey: process.env.QSTASH_NEXT_SIGNING_KEY!,
+});
 
 export default async (req: VercelRequest, res: VercelResponse) => {
-  console.log("delete-messages handler called"); // <-- inside handler
-  console.log("method:", req.method);
-  console.log("body:", req.body);
-
-  if (req.method !== "POST") {
-    return res.status(405).send("Method Not Allowed");
-  }
-
-  const { chatId, userMessageId, botMessageId } = req.body;
-
-  console.log("chatId:", chatId, "userMessageId:", userMessageId, "botMessageId:", botMessageId);
-
-  if (!chatId || !userMessageId || !botMessageId) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-
-  await sleep(60 * 1000);
-
   try {
-    await bot.telegram.deleteMessage(chatId, userMessageId);
-    console.log("User message deleted.");
-  } catch (err) {
-    console.error("Failed to delete user message:", err);
-  }
+    // Verify the request is genuinely from QStash
+    const signature = req.headers["upstash-signature"] as string;
+    const body = JSON.stringify(req.body);
 
-  try {
-    await bot.telegram.deleteMessage(chatId, botMessageId);
-    console.log("Bot message deleted.");
-  } catch (err) {
-    console.error("Failed to delete bot message:", err);
-  }
+    const isValid = await receiver.verify({
+      signature,
+      body,
+    });
 
-  return res.status(200).send("OK");
+    if (!isValid) {
+      console.error("Invalid QStash signature");
+      return res.status(401).send("Unauthorized");
+    }
+
+    const { chatId, userMessageId, botMessageId } = req.body;
+    console.log("Deleting messages for chatId:", chatId);
+
+    try {
+      await bot.telegram.deleteMessage(chatId, userMessageId);
+      console.log("User message deleted.");
+    } catch (err) {
+      console.error("Failed to delete user message:", err);
+    }
+
+    try {
+      await bot.telegram.deleteMessage(chatId, botMessageId);
+      console.log("Bot message deleted.");
+    } catch (err) {
+      console.error("Failed to delete bot message:", err);
+    }
+
+    return res.status(200).send("OK");
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 };
