@@ -1,11 +1,14 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { Telegraf } from "telegraf";
-import { Client } from "@upstash/qstash";
+import { createClient } from "@supabase/supabase-js";
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 const webhookUrl = process.env.WEBHOOK_URL!;
 const bot = new Telegraf(BOT_TOKEN);
-const qstash = new Client({ token: process.env.QSTASH_TOKEN! });
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!
+);
 
 export async function handleStartCommand(ctx) {
   const COMMAND = "/start";
@@ -31,18 +34,19 @@ export async function handleStartCommand(ctx) {
 
     console.log(`Reply to ${COMMAND} command sent successfully.`);
 
-    // Schedule deletion via QStash after 5 minutes
-    await qstash.publishJSON({
-      url: `${webhookUrl}/api/delete-messages`,
-      delay: 60, // 60 seconds
-      body: {
-        chatId,
-        userMessageId,
-        botMessageId: sentMessage.message_id,
-      },
+    // Schedule deletion 5 minutes from now
+    const deleteAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+
+    const { error } = await supabase.from("pending_deletions").insert({
+      chat_id: chatId,
+      user_message_id: userMessageId,
+      bot_message_id: sentMessage.message_id,
+      delete_at: deleteAt,
     });
 
-    console.log("Deletion scheduled via QStash.");
+    if (error) console.error("Failed to schedule deletion:", error);
+    else console.log("Deletion scheduled at:", deleteAt);
+
   } catch (error) {
     console.error(`Something went wrong with the ${COMMAND} command:`, error);
   }
