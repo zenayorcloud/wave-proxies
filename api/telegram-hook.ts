@@ -53,7 +53,7 @@ How to make dat REAL cash using all sorts of proven methods:
     console.log(`Reply to ${COMMAND} command sent successfully.`);
 
     // Wait 5 seconds BEFORE the function returns
-    await sleep(5000);
+    await sleep(5 * 60 * 1000);
 
 
    try {
