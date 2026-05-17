@@ -39,7 +39,7 @@ export async function handleStartCommand(ctx) {
     console.log(`Reply to ${COMMAND} command sent successfully.`);
 
     // Wait 5 seconds BEFORE the function returns
-    await sleep(5000);
+    await sleep(60 * 1000);
 
     // Delete user's /start message
     try {
