@@ -6,6 +6,8 @@ const webhookUrl = process.env.WEBHOOK_URL;
 
 const bot = new Telegraf(BOT_TOKEN);
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function handleStartCommand(ctx) {
   const COMMAND = "/start";
   const channelUrl = "t.me/waveprxp";
