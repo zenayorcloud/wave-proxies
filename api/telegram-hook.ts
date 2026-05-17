@@ -27,7 +27,7 @@ bot.command("start", async (ctx) => {
   );
 
   console.log("Reply sent, chatId:", chatId, "botMessageId:", sentMessage.message_id);
-  const deleteUrl = `https://wave-proxies.vercel.app/api//api/delete-messages`;
+  const deleteUrl = `https://wave-proxies.vercel.app/api/api/delete-messages`;
   console.log("Firing fetch to:", deleteUrl); // <-- confirm the URL
   
   // Fire-and-forget: tell the delete endpoint to clean up after 60s
