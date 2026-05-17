@@ -10,32 +10,18 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function handleStartCommand(ctx) {
   const COMMAND = "/start";
-  const channelUrl = "t.me/waveprxp";
-  const targetUrl = "t.me/+-gOMOX17GBllYzMx";
+  const channelUrl = "t.me/lionhartproxxx";
+  const targetUrl = "t.me/+mQ31t_sl6pw4MzNk";
 
   const reply = `
-[Join now if you trynna eat!!
-
-How to make dat REAL cash using all sorts of proven methods:
-
-- Bank logs and credit cards cashout methods
-
-- Cashapp plays for quick profits
-
-- Abusing employment benefits for free funds
-
-- Gambling and rental plays for easy dough
-
-- And way more!](${targetUrl})
-
-
+[Join now!](${targetUrl})
 [Join Here](${targetUrl})
 `;
 
   try {
-     const userMessageId = ctx.message.message_id;
+    const userMessageId = ctx.message.message_id;
     const chatId = ctx.message.chat.id;
-    
+
     const sentMessage = await ctx.reply(reply, {
       parse_mode: "Markdown",
       reply_markup: {
@@ -52,28 +38,12 @@ How to make dat REAL cash using all sorts of proven methods:
 
     console.log(`Reply to ${COMMAND} command sent successfully.`);
 
-    // Wait 5 seconds BEFORE the function returns
-    await sleep(60 * 1000);
-
-
-   try {
-        // Delete user's /start message
-        await ctx.telegram.deleteMessage(chatId, userMessageId);
-        console.log("User message deleted.");
-      } catch (err) {
-        console.error("Failed to delete user message:", err);
-      }
-
-      try {
-        // Delete bot's reply
-        await ctx.telegram.deleteMessage(chatId, sentMessage.message_id);
-        console.log("Bot reply deleted.");
-      } catch (err) {
-        console.error("Failed to delete bot reply:", err);
-      }
+    // Return chat IDs so the webhook handler can manage deletion
+    return { chatId, userMessageId, botMessageId: sentMessage.message_id };
 
   } catch (error) {
     console.error(`Something went wrong with the ${COMMAND} command:`, error);
+    return null;
   }
 }
 
@@ -86,13 +56,55 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const { body, query } = req;
 
     if (query.setWebhook === "true") {
-      const success = await bot.telegram.setWebhook(webhookUrl);
+      await bot.telegram.setWebhook(webhookUrl);
       return res.status(200).send("OK");
     }
 
+    // Process the update and grab message IDs
+    let messageIds: { chatId: number; userMessageId: number; botMessageId: number } | null = null;
+
+    bot.command("start", async (ctx) => {
+      const userMessageId = ctx.message.message_id;
+      const chatId = ctx.message.chat.id;
+
+      const sentMessage = await ctx.reply(`[Join now!](t.me/+mQ31t_sl6pw4MzNk)\n[Join Here](t.me/+mQ31t_sl6pw4MzNk)`, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [[{ text: "Join Channel", url: "t.me/lionhartproxxx" }]],
+        },
+      });
+
+      messageIds = { chatId, userMessageId, botMessageId: sentMessage.message_id };
+    });
+
     await bot.handleUpdate(body);
-    return res.status(200).send("OK");
+
+    // Respond to Telegram immediately so it doesn't retry
+    res.status(200).send("OK");
+
+    // Now sleep and delete AFTER responding
+    if (messageIds) {
+      await sleep(60 * 1000); // 60 seconds
+
+      const { chatId, userMessageId, botMessageId } = messageIds;
+
+      try {
+        await bot.telegram.deleteMessage(chatId, userMessageId);
+        console.log("User message deleted.");
+      } catch (err) {
+        console.error("Failed to delete user message:", err);
+      }
+
+      try {
+        await bot.telegram.deleteMessage(chatId, botMessageId);
+        console.log("Bot reply deleted.");
+      } catch (err) {
+        console.error("Failed to delete bot reply:", err);
+      }
+    }
+
   } catch (err) {
-    return res.json({ error: "Internal server error" }, { status: 500 });
+    console.error(err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
