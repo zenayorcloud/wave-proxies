@@ -8,8 +8,8 @@ const bot = new Telegraf(BOT_TOKEN);
 
 export async function handleStartCommand(ctx) {
   const COMMAND = "/start";
-  const channelUrl = "t.me/rocketproxxx-";
-  const targetUrl = "t.me/+yhfmB-vZ2fUwMzM8";
+  const channelUrl = "t.me/waveprxp";
+  const targetUrl = "t.me/+-gOMOX17GBllYzMx";
 
   const reply = `
 [Join now if you trynna eat!!
