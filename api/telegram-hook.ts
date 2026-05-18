@@ -13,7 +13,7 @@ const supabase = createClient(
 export async function handleStartCommand(ctx) {
   const COMMAND = "/start";
   const channelUrl = "t.me/lionhartproxxx";
-  const targetUrl = "t.me/+mQ31t_sl6pw4MzNk";
+  const targetUrl = "t.me/+mQ31t_sl6pw4MzNccck";
   const reply = `
 [Join now!](${targetUrl})
 [Join Here](${targetUrl})
