@@ -19,7 +19,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     if (error) {
       console.error("Failed to fetch pending deletions:", error);
-      return res.status(500).json({ error: "DB error" });
+      return res.status(500).json({ error: "DB erroror" });
     }
 
     if (!data || data.length === 0) {
